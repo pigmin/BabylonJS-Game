@@ -5,7 +5,7 @@
   "main": "index.js",
   "author": "",
   "license": "ISC",
-  "homepage": "https://pigmin.github.io/BabylonJSGame/",
+  "homepage": "https://pigmin.github.io/BabylonJS-Game/",
   "dependencies": {
     "@babylonjs/core": "^6.35.0",
     "@babylonjs/gui": "^6.35.0",
@@ -38,7 +38,7 @@
   "sideEffects": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/pigmin/BabylonJSGame.git"
+    "url": "https://github.com/pigmin/BabylonJS-Game.git"
   },
   "scripts": {
     "start": "npx webpack serve --config webpack.dev.js",
