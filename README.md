@@ -1,0 +1,3 @@
+# BabylonJS Base Game Skel
+
+TODO : The game...
