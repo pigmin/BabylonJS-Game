@@ -48,7 +48,7 @@ class Game {
   #assetsManager;
   #glowLayer;
 
-  #bPause;
+  #bPause = false;
 
   #bInspector = false;
 
