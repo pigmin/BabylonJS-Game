@@ -50,9 +50,6 @@ class Game {
 
   #bPause;
 
-  #ground;
-
-  inputController;
   #bInspector = false;
 
   #meshesArray = [];
