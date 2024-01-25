@@ -42,7 +42,6 @@ let currentLevel = 1;
 
 
 class Game {
-  static name = "Game";
 
   #gameScene;
   #assetsManager;

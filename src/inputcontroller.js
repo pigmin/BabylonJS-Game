@@ -2,7 +2,6 @@ import { GamepadManager, KeyboardEventTypes } from "@babylonjs/core";
 import { GlobalManager } from "./globalmanager";
 
 class InputController {
-  static name = "InputController";
     
   #gamepadManager;
 

@@ -1,18 +1,17 @@
 //Gyruss
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
-import "@babylonjs/core/Engines/WebGPU/Extensions/engine.uniformBuffer";
 
 import Game from "./game";
 
-let canvas;
-let engine;
+let canvas :HTMLCanvasElement;
+let engine :Engine;
 
 export const babylonInit = async () => {
     const engineType = location.search.split("engine=")[1]?.split("&")[0] || "webgl";
 
     // Get the canvas element
-    canvas = document.getElementById("renderCanvas");
+    canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
     // Generate the BABYLON 3D engine
     if (engineType === "webgpu") {
         const webGPUSupported = await WebGPUEngine.IsSupportedAsync;
@@ -50,7 +49,7 @@ babylonInit().then(() => {
     // scene started rendering, everything is initialized
     // Register a render loop to repeatedly render the scene
     // Create the scene
-    const game = window.game = new Game(canvas, engine);
+    const game = new Game(canvas, engine);
     game.start();
 
 });

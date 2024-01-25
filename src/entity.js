@@ -29,7 +29,7 @@ export class Entity {
     this.x = x || 0;
     this.y = y || 0;
     this.z = z || 0;
-    this.transform = new TransformNode();
+    this.transform = new TransformNode("");
     this.transform.position = new Vector3(this.x, this.y, this.z);
   }
 
