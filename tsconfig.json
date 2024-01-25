@@ -1,7 +1,7 @@
 {
-    "compilerOptions": {
-    "module": "esNext",
-    "target": "es2021",
+  "compilerOptions": {
+    "module": "ES6",
+    "target": "ES6",
     "moduleResolution": "node",
     "strict": true,
     "noImplicitAny": true,
@@ -11,9 +11,10 @@
     "strictFunctionTypes": true,
     "preserveConstEnums":true,
     "sourceMap": true,
-    "rootDir": "./",
+    "rootDir": "./src",
     "esModuleInterop": true,
-    },
-    "include": ["src/**/*"]
-  }
-  
+    "allowJs": true,
+    "forceConsistentCasingInFileNames" : true,
+  },
+  "exclude": ["node_modules/**/*", "dist/**/*", "webpack*.*"]
+}

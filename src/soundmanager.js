@@ -6,7 +6,6 @@ import { AssetsManager, Sound } from "@babylonjs/core";
 
 
 class SoundManager {
-  static name = "SoundManager";
 
   
     SoundsFX = Object.freeze({
@@ -20,8 +19,8 @@ class SoundManager {
         START_MUSIC: 0,
     });
 
-  #soundsFX = [];
-  #musics = [];
+  #soundsFX  = [];
+  #musics  = [];
 
   #prevMusic;
 

@@ -22,7 +22,6 @@ export const States = Object.freeze({
 
   
 class GlobalManager {
-    static name = "GlobalManager";
 
     #canvas;
     #engine;
