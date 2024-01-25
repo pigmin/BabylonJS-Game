@@ -9,7 +9,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const appDirectory = fs.realpathSync(process.cwd());
 
 module.exports = {
-    entry: path.resolve(appDirectory, "src/index.ts"),
+    entry: path.resolve(appDirectory, "src/index.js"),
     output: {
         filename: "js/babylonBundle.js",
         path: path.resolve("./dist/"),
