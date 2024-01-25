@@ -1,6 +1,5 @@
 //Gyruss
 import { Engine } from "@babylonjs/core/Engines/engine";
-import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 
 import Game from "./game";
 
