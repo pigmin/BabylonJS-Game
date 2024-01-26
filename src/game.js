@@ -3,7 +3,7 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 import { Scene } from "@babylonjs/core/scene";
-import { Color3, AssetsManager, ShadowGenerator, DirectionalLight, Animation, Engine, CubeTexture, GlowLayer, FlyCamera, MeshBuilder, StandardMaterial, Texture, EnvironmentHelper, HemisphericLight, Color4, UniversalCamera } from "@babylonjs/core";
+import { Color3, AssetsManager, ShadowGenerator, DirectionalLight, Animation, Engine, CubeTexture, GlowLayer, FlyCamera, MeshBuilder, StandardMaterial, Texture, EnvironmentHelper, HemisphericLight, Color4, UniversalCamera, ParticleSystem } from "@babylonjs/core";
 
 
 
@@ -23,6 +23,8 @@ import { SoundManager } from "./soundmanager";
 
 
 //ASSETS
+import flareParticlesTextureUrl from "../assets/particles/textures/flare3.png";
+
 import envfileUrl from "../assets/env/environment.env";
 
 
@@ -39,6 +41,10 @@ let currentScore = 0;
 let currentHighScore = 0;
 let currentLevel = 1;
 
+const useGPU = false;
+const renderAsFluid = true;
+const numParticles = 20000 * 2;
+const numParticlesEmitRate = 2500 * 2;
 
 
 class Game {
@@ -46,6 +52,7 @@ class Game {
   #gameScene;
   #assetsManager;
   #glowLayer;
+  #particleSystem;
 
   #bPause = false;
 
@@ -69,7 +76,7 @@ class Game {
   #cameraMenuTarget = new Vector3(-9, -8, 22);
 
   #cameraGamePosition = new Vector3(8.33, 5.66, -6.13);
-  #cameraGameTarget = new Vector3(-32.37, -13.54, -0.11);   
+  #cameraGameTarget = new Vector3(-32.37, -13.54, -0.11);
 
   constructor(canvas, engine) {
 
@@ -114,29 +121,29 @@ class Game {
 
     // if not setting the envtext of the scene, we have to load the DDS module as well
     var envOptions = {
-      environmentTexture : new CubeTexture(envfileUrl, GlobalManager.scene),
+      environmentTexture: new CubeTexture(envfileUrl, GlobalManager.scene),
       skyboxTexture: envfileUrl,
-      skyboxSize : 10000,
+      skyboxSize: 10000,
       createGround: true,
-      groundSize : 500,
-      groundColor : new Color4(.59, .50, .48, 1),
+      groundSize: 500,
+      groundColor: new Color4(.59, .50, .48, 1),
       //enableGroundMirror: true,
       groundYBias: 0.01,
       groundShadowLevel: 0.6,
-  };
-  GlobalManager.env = GlobalManager.scene.createDefaultEnvironment(envOptions);
+    };
+    GlobalManager.env = GlobalManager.scene.createDefaultEnvironment(envOptions);
 
-//MeshBuilder.CreateBox("bb", {size:1});
-   
+    //MeshBuilder.CreateBox("bb", {size:1});
+
     GlobalManager.activeCamera = this.#cameras.main;
-   
-    
+
+
 
     // directional light needed for shadows
     this.#lights.hemisphericlight = new HemisphericLight(
-        "light",
-        new Vector3(0, 1, 0),
-        GlobalManager.scene
+      "light",
+      new Vector3(0, 1, 0),
+      GlobalManager.scene
     );
 
     // Default intensity is 1. Let's dim the light a small amount
@@ -148,13 +155,13 @@ class Game {
     //this.#lights.dirLight.position = new Vector3(-0.28, 3.78, -0.98);
     this.#lights.dirLight.diffuse = Color3.FromInts(255, 251, 199);
     this.#lights.dirLight.intensity = 6;
-    
-    
+
+
     GlobalManager.shadowGenerator = new ShadowGenerator(1024, this.#lights.dirLight);
     GlobalManager.shadowGenerator.frustumEdgeFalloff = 1.0;
     GlobalManager.shadowGenerator.bias = 0.00001;
     GlobalManager.shadowGenerator.normalBias = 0.01;
-    GlobalManager.shadowGenerator.usePercentageCloserFiltering  = true;
+    GlobalManager.shadowGenerator.usePercentageCloserFiltering = true;
     GlobalManager.shadowGenerator.setDarkness(0.0);
 
     InputController.init();
@@ -162,6 +169,7 @@ class Game {
 
     await this.loadAssets();
 
+    await this.initParticles(GlobalManager.scene);
 
     GlobalManager.gameState = (States.STATE_PRE_INTRO);
     this.launchCreditsAnimation(() => {
@@ -172,6 +180,96 @@ class Game {
       GlobalManager.gameState = (States.STATE_MENU);
     });
 
+
+  }
+
+  initParticles(scene) {
+    this.#particleSystem = new ParticleSystem(
+      "particles",
+      numParticles,
+      scene
+    );
+    //Texture of each particle
+    this.#particleSystem.particleTexture = new Texture(
+      flareParticlesTextureUrl,
+      scene
+    );
+    this.#particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
+
+    // Where the particles come from
+    this.#particleSystem.createConeEmitter(1, Math.PI / 16);
+
+    // Colors of all particles
+    this.#particleSystem.color1 = new Color4(0.2, 0.5, 1.0, 1.0);
+    this.#particleSystem.color2 = new Color4(0.4, 0.1, 1.0, 1.0);
+    this.#particleSystem.colorDead = new Color4(0, 0, 0.0, 0.0);
+
+    // Size of each particle (random between...
+    this.#particleSystem.minSize = 0.25;
+    this.#particleSystem.maxSize = 0.25;
+
+    // Life time of each particle (random between...
+    this.#particleSystem.minLifeTime = 1.0;
+    this.#particleSystem.maxLifeTime = 3.0;
+
+    // Emission rate
+    this.#particleSystem.emitRate = numParticlesEmitRate;
+
+    // Set the gravity of all particles
+    this.#particleSystem.gravity = new Vector3(0, -9.87, 0);
+
+    // Speed
+    this.#particleSystem.minEmitPower = 6.0;
+    this.#particleSystem.maxEmitPower = 12.0;
+    this.#particleSystem.updateSpeed = 0.02;
+
+    // Start the particle system
+    this.#particleSystem.preWarmCycles = 60 * 8;
+
+    this.#particleSystem.worldOffset = new Vector3(-1.31, 0.47, -0.41);
+    this.#particleSystem.start();
+
+    //Below : render as fluid...it-s working 
+
+    return new Promise((resolve) => {
+      scene.executeWhenReady(() => {
+        scene.updateTransformMatrix(true);
+
+        this.#particleSystem.render(); // make sure the pre-warm cycles are done in the GPU case (for CPU case it is done when calling start())
+
+        this.#particleSystem.renderAsFluid = renderAsFluid;
+
+        if (renderAsFluid) {
+          this._fluidRenderer = scene.enableFluidRenderer();
+
+          this._fluidRenderer.addParticleSystem(this.#particleSystem);
+
+          this._fluidRenderObject =
+            this._fluidRenderer.getRenderObjectFromParticleSystem(
+              this.#particleSystem
+            );
+
+          this._fluidRenderObject.object.particleSize = 0.125;
+          this._fluidRenderObject.object.particleThicknessAlpha = 0.02;
+          this._fluidRenderObject.object.useTrueRenderingForDiffuseTexture = true;
+          this._fluidRenderObject.targetRenderer.minimumThickness = this._fluidRenderObject.object.particleThicknessAlpha;
+          this._fluidRenderObject.targetRenderer.blurDepthFilterSize = 10;
+          this._fluidRenderObject.targetRenderer.blurDepthDepthScale = 10;
+          this._fluidRenderObject.targetRenderer.thicknessMapSize = 1024;
+          this._fluidRenderObject.targetRenderer.density = 16;
+          this._fluidRenderObject.targetRenderer.fresnelClamp = 0.04;
+          this._fluidRenderObject.targetRenderer.fluidColor = new Color3(
+            209 / 255,
+            218 / 255,
+            1
+          );
+          this._fluidRenderObject.targetRenderer.generateDiffuseTexture = false;
+
+        }
+
+        resolve(this.#particleSystem);
+      }, true);
+    });
 
   }
 
@@ -308,10 +406,10 @@ class Game {
       //outTangent: new Vector3(1, 0, 0)
     });
     keys.push({
-      frame: endFrame/3 ,
+      frame: endFrame / 3,
       value: this.#cameraStartPosition,
       //outTangent: new Vector3(1, 0, 0)
-    });    
+    });
     keys.push({
       frame: endFrame,
       //inTangent: new Vector3(-1, 0, 0),
@@ -415,7 +513,7 @@ class Game {
 
       this.#assetsManager = new AssetsManager(GlobalManager.scene);
 
-      
+
       this.LoadEntity(
         "environment",
         "",
@@ -423,14 +521,14 @@ class Game {
         environmentModelUrl,
         this.#assetsManager,
         this.#meshesArray,
-        { position: new Vector3(0, 0, 0), scaling: new Vector3(1, 1, 1)},
+        { position: new Vector3(0, 0, 0), scaling: new Vector3(1, 1, 1) },
         GlobalManager.scene,
         true,
         (mesh) => {
           this.#meshes.environment = mesh;
           mesh.rotation = new Vector3(0, Math.PI, 0);
           mesh.freezeWorldMatrix();
-          
+
         }
       );
 
@@ -446,7 +544,7 @@ class Game {
         true,
         (mesh) => {
           this.#meshes.logo = mesh;
-          mesh.rotation = new Vector3(-Math.PI/2, -Math.PI/3, 0);
+          mesh.rotation = new Vector3(-Math.PI / 2, -Math.PI / 3, 0);
           let mat = GlobalManager.scene.getMaterialByName("Material.001");
           mat.emissiveColor = Color3.Blue();
 
@@ -462,8 +560,8 @@ class Game {
           mat = GlobalManager.scene.getMaterialByName("Material.005");
           mat.emissiveColor = Color3.Red();
 
-          
-         // mesh.freezeWorldMatrix();
+
+          // mesh.freezeWorldMatrix();
         }
       );
 
@@ -474,8 +572,8 @@ class Game {
       // after all tasks done, set up particle system
       this.#assetsManager.onFinish = (tasks) => {
         console.log("tasks successful", tasks);
-      
-        
+
+
         resolve(true);
       }
 
@@ -505,11 +603,11 @@ class Game {
 
       if (GlobalManager.gameState == States.STATE_PRE_INTRO) {
         //RAS
-        this.#meshes.logo.rotation.y += Math.PI/100;
+        this.#meshes.logo.rotation.y += Math.PI / 100;
       }
       else if (GlobalManager.gameState == States.STATE_MENU) {
 
-        this.#meshes.logo.rotation.y += Math.PI/200;
+        this.#meshes.logo.rotation.y += Math.PI / 200;
 
         if (InputController.actions["Space"]) {
           if (GlobalManager.gameState == States.STATE_MENU) {
@@ -537,7 +635,7 @@ class Game {
         GlobalManager.gameState = (States.STATE_NEW_LEVEL);
       }
       else if (GlobalManager.gameState == States.STATE_LAUNCH) {
-          
+
       }
       else if (GlobalManager.gameState == States.STATE_NEW_LEVEL) {
         GlobalManager.gameState = (States.STATE_LEVEL_READY);

@@ -6,7 +6,7 @@ import Game from "./game";
 let canvas;
 let engine;
 
-export const babylonInit = async () => {
+const babylonInit = async () => {
     
     // Get the canvas element
     canvas = document.getElementById("renderCanvas");
