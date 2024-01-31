@@ -33,7 +33,7 @@ class SoundManager {
   }
 
   async init() {
-    await this.loadAssets();
+    return this.loadAssets();
   }
 
   update() {
@@ -56,7 +56,7 @@ class SoundManager {
     }
   }
 
-  loadAssets() {
+  async loadAssets() {
     return new Promise((resolve) => {
 
         // Asset manager for loading texture and particle system
@@ -64,9 +64,6 @@ class SoundManager {
 
         const music0Data = assetsManager.addBinaryFileTask("music0", mainMusicUrl);
         const whistleSoundData = assetsManager.addBinaryFileTask("fireSound", whistleSoundUrl);
-
-        // load all tasks
-        assetsManager.load();
 
         // after all tasks done, set up particle system
         assetsManager.onFinish = (tasks) => {
@@ -78,7 +75,15 @@ class SoundManager {
 
             resolve(true);
         }
+        
+        assetsManager.onError = (task, message, exception) => {
+          console.log(task, message, exception);
+          reject(false);
+        }
 
+        // load all tasks
+        assetsManager.load();
+      
     });
 
 
